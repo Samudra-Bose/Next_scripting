@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///home/samudra/Projects/VisualSCode/VisualCode/Vscoding/Projects/NextProject/app/page.jsx"],"sourcesContent":["export default function Page(){\n    return <h1>Hi there, Everything's working great!</h1>\n}"],"names":["Page"],"mappings":";;;;;;AAAe,SAASA;IACpB,qBAAO,8OAAC;kBAAG;;;;;;AACf"}}]
+}
