@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+:root {
+  --bg-canvas: #f7f6f2;
+  --fg-ink: #08080b;
+  --fg-body: #2d2d34;
+  --fg-muted: #52525c;
+  --card-bg: #ffffff;
+  --border-subtle: rgba(8, 8, 11, 0.14);
+  --border-strong: rgba(8, 8, 11, 0.85);
+  --neon-pink: #ff1a75;
+  --neon-cyan: #00e5ff;
+  --neon-amber: #ff9900;
+  --neon-emerald: #10b981;
+  --grid-dot: rgba(0, 0, 0, 0.10);
+  --glow-halo: rgba(255, 26, 117, 0.12);
+}
+
+html.dark {
+  --bg-canvas: #07080a;
+  --fg-ink: #f8f9fc;
+  --fg-body: #d1d2dc;
+  --fg-muted: #9ca0af;
+  --card-bg: #0f1117;
+  --border-subtle: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.9);
+  --neon-pink: #ff2a80;
+  --neon-cyan: #00f0ff;
+  --neon-amber: #ffaa11;
+  --neon-emerald: #22c55e;
+  --grid-dot: rgba(255, 255, 255, 0.10);
+  --glow-halo: rgba(255, 42, 128, 0.18);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--fg-ink);
+  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  overflow-x: hidden;
+  transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Authentic Dot-Matrix Background from Reference with boosted contrast */
+.dot-grid-bg {
+  background-image: radial-gradient(var(--grid-dot) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+
+/* Subtle CRT Scanline overlay */
+.crt-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.025) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.008),
+    rgba(0, 255, 0, 0.004),
+    rgba(0, 0, 255, 0.008)
+  );
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Giant condensed display typography like Noomo Labs */
+.font-condensed {
+  font-family: var(--font-condensed, "Impact", "Arial Black", sans-serif);
+  letter-spacing: -0.04em;
+  line-height: 0.86;
+  text-transform: uppercase;
+}
+
+.font-mono-tech {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  letter-spacing: -0.015em;
+}
+
+/* Radiant 3D Backlight Halo from Noomo Reference */
+.hero-halo {
+  background: radial-gradient(
+    circle 450px at 50% 50%,
+    var(--glow-halo) 0%,
+    rgba(0, 229, 255, 0.06) 40%,
+    transparent 75%
+  );
+}
+
+/* High-Contrast Tech borders and HUD accents */
+.hud-border {
+  border: 1px solid var(--border-subtle);
+}
+
+.hud-border-b {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.hud-border-t {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.hud-border-l {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.hud-border-r {
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* Crisp Glass Panels */
+.glass-panel {
+  background: var(--card-bg);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+html.dark .glass-panel {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Custom interactive scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+/* Marquee keyframes */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Radar pulse animation */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar {
+  animation: radar-sweep 4s linear infinite;
+}
+
+/* Pulse glow effects */
+.glow-pink {
+  box-shadow: 0 0 16px rgba(255, 26, 117, 0.45);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.45);
+}
