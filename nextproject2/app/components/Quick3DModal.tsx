@@ -1,3 +1,9 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: CLIENT-SIDE MODAL PORTAL & WEBGL INSPECTION
+// ==============================================================================
+// File location: app/components/Quick3DModal.tsx
+// Declared as `"use client"` because it manages interactive overlay state,
+// WebGL canvas creation on demand, and keyboard/mouse event listeners.
 "use client"
 
 import { useEffect, useRef, useState } from "react"
@@ -9,36 +15,47 @@ import { buildProceduralModel } from "@/app/lib/model3DGenerator"
 import { getModelSpecs } from "@/app/lib/modelData"
 import { X, Heart, Download, ExternalLink } from "lucide-react"
 
+// Strongly typed props for the modal inspector
 type Quick3DModalProps = {
   model: Model | null
   onClose: () => void
 }
 
 export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
+  // Container ref for Three.js WebGL canvas mounting
   const containerRef = useRef<HTMLDivElement>(null)
-  const [wireframe, setWireframe] = useState(false)
-  const [liked, setLiked] = useState(false)
+  // State for wireframe topology vs solid PBR shading
+  const [wireframe, setWireframe] = useState<boolean>(false)
+  // Local like state toggle
+  const [liked, setLiked] = useState<boolean>(false)
 
-  // Three.js internal refs
+  // Three.js internal references
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const animFrameRef = useRef<number | null>(null)
 
+  // ==============================================================================
+  // WEBGL SCENE MOUNTING EFFECT
+  // ==============================================================================
+  // Runs whenever a new model is selected for inspection or wireframe is toggled.
   useEffect(() => {
     if (!model || !containerRef.current) return
     const container = containerRef.current
     const width = container.clientWidth
     const height = container.clientHeight
 
+    // 1. Perspective Camera
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
     camera.position.set(0, 0.3, 4.2)
 
+    // 2. High-DPI WebGL Renderer
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
+    // 3. Multi-Point Studio Lights
     const ambient = new THREE.AmbientLight(0xffffff, 1.2)
     scene.add(ambient)
 
@@ -54,17 +71,18 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
     cyanFill.position.set(3, -2, -2)
     scene.add(cyanFill)
 
-    // Build procedural 3D assembly uniquely for this exact model ID
+    // 4. Procedural 3D Geometry generated specifically for this model ID
     const modelMesh = buildProceduralModel(model.id, wireframe)
     scene.add(modelMesh)
 
-    // Orbit rings
+    // Orbital cyber datum ring
     const ringGeom = new THREE.TorusGeometry(1.8, 0.015, 12, 48)
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true, opacity: 0.35, transparent: true })
     const ring = new THREE.Mesh(ringGeom, ringMat)
     ring.rotation.x = Math.PI / 3
     scene.add(ring)
 
+    // 5. Smooth Inspection Turntable Animation Loop
     const clock = new THREE.Clock()
     const animate = () => {
       const elapsed = clock.getElapsedTime()
@@ -76,6 +94,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
     }
     animate()
 
+    // 6. Responsive Resize Handler
     const handleResize = () => {
       if (!containerRef.current || !rendererRef.current) return
       const w = containerRef.current.clientWidth
@@ -86,6 +105,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
     }
     window.addEventListener("resize", handleResize)
 
+    // Clean up WebGL resources and animation frames on modal unmount
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
       window.removeEventListener("resize", handleResize)
@@ -96,16 +116,20 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
     }
   }, [model, wireframe])
 
+  // Early return if modal is closed (no DOM overhead or memory consumption)
   if (!model) return null
 
+  // Retrieve physical 3D specs
   const specs = getModelSpecs(model.id)
   const displayLikes = model.likes + (liked ? 1 : 0)
 
+  // Toggle favorite like state
   const handleLike = () => {
     sound.playClick()
     setLiked(!liked)
   }
 
+  // Toggle wireframe rendering
   const toggleWire = () => {
     sound.playClick()
     setWireframe(!wireframe)
@@ -114,7 +138,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 rounded-2xl hud-border overflow-hidden shadow-2xl grid grid-cols-1 md:grid-cols-12">
-        {/* Close Button */}
+        {/* Modal Close Button */}
         <button
           onClick={() => {
             sound.playClick()
@@ -127,7 +151,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Left: 3D Viewport (7 cols) */}
+        {/* Left Column: 3D Viewport (7 Columns) */}
         <div className="md:col-span-7 relative bg-neutral-950 p-4 flex flex-col justify-between overflow-hidden">
           <div className="flex items-center justify-between text-[11px] font-mono-tech text-neutral-400 z-20">
             <span className="flex items-center gap-1.5 text-white">
@@ -142,6 +166,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
             </button>
           </div>
 
+          {/* Three.js Canvas Container */}
           <div
             ref={containerRef}
             className="w-full h-[300px] sm:h-[380px] cursor-grab active:cursor-grabbing relative"
@@ -153,7 +178,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
           </div>
         </div>
 
-        {/* Right: Spec sheet & Details (5 cols) */}
+        {/* Right Column: Spec Sheet & Actions (5 Columns) */}
         <div className="md:col-span-5 p-6 flex flex-col justify-between gap-6 font-mono-tech">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -179,6 +204,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
               {model.description}
             </p>
 
+            {/* Dimensional Specifications */}
             <div className="space-y-2 text-xs border-y border-neutral-200 dark:border-neutral-800 py-3">
               <div className="flex justify-between">
                 <span className="text-neutral-500">BOUNDS (X/Y/Z):</span>
@@ -207,6 +233,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
             </div>
           </div>
 
+          {/* Action CTAs */}
           <div className="space-y-2 pt-2">
             <button
               onClick={() => {
@@ -220,6 +247,7 @@ export default function Quick3DModal({ model, onClose }: Quick3DModalProps) {
               <span>DOWNLOAD STL ARCHIVE</span>
             </button>
 
+            {/* Next.js dynamic routing link */}
             <Link
               href={`/3d-models/${model.id}`}
               onClick={() => {
