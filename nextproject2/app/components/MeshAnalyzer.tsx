@@ -1,3 +1,9 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: CLIENT-SIDE COMPUTATIONAL WORKBENCH
+// ==============================================================================
+// File location: app/components/MeshAnalyzer.tsx
+// Declared with `"use client"` because it executes client-side geometric calculations,
+// manages interactive state presets, and drives real-time Three.js 3D mesh rendering.
 "use client"
 
 import { useEffect, useRef, useState } from "react"
@@ -5,6 +11,10 @@ import * as THREE from "three"
 import { sound } from "@/app/lib/sound"
 import { ShieldCheck, Cpu, Box } from "lucide-react"
 
+// ==============================================================================
+// TYPESCRIPT DOMAIN MODEL: 3D CAD PRESET SPECIFICATIONS
+// ==============================================================================
+// Strongly typed schema modeling geometric bounding dimensions, poly counts, and print times.
 type ModelPreset = {
   id: string
   name: string
@@ -16,6 +26,7 @@ type ModelPreset = {
   geometryType: "dragon" | "helmet" | "gear" | "planter"
 }
 
+// Preset library simulating real STL CAD metadata
 const PRESETS: ModelPreset[] = [
   {
     id: "dragon",
@@ -60,23 +71,32 @@ const PRESETS: ModelPreset[] = [
 ]
 
 export default function MeshAnalyzer() {
+  // Currently selected CAD model preset
   const [selected, setSelected] = useState<ModelPreset>(PRESETS[0])
+  // View mode shader state: solid PBR, wireframe topology, or FEA stress heatmap
   const [viewMode, setViewMode] = useState<"solid" | "wire" | "stress">("solid")
+  // Container element reference for Three.js canvas attachment
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Three.js internal refs
+  // Three.js internal references
   const sceneRef = useRef<THREE.Scene | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const meshRef = useRef<THREE.Mesh | null>(null)
   const animFrameRef = useRef<number | null>(null)
 
+  // ==============================================================================
+  // REACT HOOK: DYNAMIC 3D SCENE RECONSTRUCTION ON PRESET/VIEWMODE CHANGE
+  // ==============================================================================
+  // Whenever the user clicks a preset or switches shader modes, this effect
+  // safely reconfigures the WebGL scene and disposes previous geometry to avoid memory leaks.
   useEffect(() => {
     if (!containerRef.current) return
     const container = containerRef.current
     const width = container.clientWidth
     const height = container.clientHeight
 
+    // Scene & Perspective Camera
     const scene = new THREE.Scene()
     sceneRef.current = scene
 
@@ -84,6 +104,7 @@ export default function MeshAnalyzer() {
     camera.position.set(0, 1.2, 4.5)
     cameraRef.current = camera
 
+    // WebGL Renderer Setup
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -94,6 +115,7 @@ export default function MeshAnalyzer() {
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
+    // Multi-Point Lighting Studio Rig
     const ambient = new THREE.AmbientLight(0xffffff, 1.2)
     scene.add(ambient)
 
@@ -109,7 +131,7 @@ export default function MeshAnalyzer() {
     cyanFill.position.set(3, -2, -2)
     scene.add(cyanFill)
 
-    // Build geometry according to selected model preset
+    // Build procedural geometry matching active CAD preset
     let geom: THREE.BufferGeometry
     if (selected.geometryType === "dragon") {
       geom = new THREE.TorusKnotGeometry(0.9, 0.28, 120, 24, 2, 5)
@@ -121,12 +143,12 @@ export default function MeshAnalyzer() {
       geom = new THREE.IcosahedronGeometry(1.1, 3)
     }
 
-    // Material according to viewMode
+    // Material configuration matching selected view mode
     let mat: THREE.Material
     if (viewMode === "wire") {
       mat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true })
     } else if (viewMode === "stress") {
-      // Heatmap gradient representation
+      // FEA Finite Element Stress Heatmap visualization
       mat = new THREE.MeshStandardMaterial({
         color: 0xff3355,
         roughness: 0.2,
@@ -135,6 +157,7 @@ export default function MeshAnalyzer() {
         emissiveIntensity: 0.3,
       })
     } else {
+      // High-precision dark titanium PBR material
       mat = new THREE.MeshStandardMaterial({
         color: 0x222329,
         metalness: 0.9,
@@ -146,11 +169,11 @@ export default function MeshAnalyzer() {
     scene.add(mesh)
     meshRef.current = mesh
 
-    // Bounding Box visualizer
+    // Bounding Box visualizer overlay (±0.02mm tolerance verification)
     const bbox = new THREE.BoxHelper(mesh, 0xff2a7a)
     scene.add(bbox)
 
-    // Animation Loop
+    // Rotational Inspection Animation Loop
     const clock = new THREE.Clock()
     const animate = () => {
       const elapsed = clock.getElapsedTime()
@@ -164,6 +187,7 @@ export default function MeshAnalyzer() {
     }
     animate()
 
+    // Resize listener keeping projection matrix updated
     const handleResize = () => {
       if (!containerRef.current || !rendererRef.current || !cameraRef.current) return
       const w = containerRef.current.clientWidth
@@ -174,6 +198,7 @@ export default function MeshAnalyzer() {
     }
     window.addEventListener("resize", handleResize)
 
+    // Unmount cleanup: cancel requestAnimationFrame and dispose WebGL resources
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
       window.removeEventListener("resize", handleResize)
@@ -181,13 +206,15 @@ export default function MeshAnalyzer() {
         container.removeChild(renderer.domElement)
       }
       renderer.dispose()
+      geom.dispose()
+      mat.dispose()
     }
   }, [selected, viewMode])
 
   return (
     <section id="analyzer" className="w-full hud-border-b py-16 px-4 md:px-8 bg-neutral-100 dark:bg-neutral-950/60 relative">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono-tech text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-1">
@@ -227,9 +254,9 @@ export default function MeshAnalyzer() {
           ))}
         </div>
 
-        {/* Workbench Layout */}
+        {/* Workbench Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left: 3D Geometry Preview (7 cols) */}
+          {/* Left: 3D Geometry Preview (7 Columns) */}
           <div className="lg:col-span-7 bg-white dark:bg-neutral-900 rounded-xl hud-border p-4 flex flex-col justify-between relative shadow-sm">
             <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-3">
               <div className="flex items-center gap-2 text-xs font-mono-tech">
@@ -242,7 +269,7 @@ export default function MeshAnalyzer() {
                 </span>
               </div>
 
-              {/* View Mode Selector */}
+              {/* View Mode Shader Selector */}
               <div className="flex items-center gap-1">
                 {(["solid", "wire", "stress"] as const).map((mode) => (
                   <button
@@ -264,7 +291,7 @@ export default function MeshAnalyzer() {
               </div>
             </div>
 
-            {/* 3D Canvas Viewport */}
+            {/* Three.js Canvas Container */}
             <div
               ref={containerRef}
               className="w-full h-[320px] sm:h-[380px] cursor-grab active:cursor-grabbing relative"
@@ -277,9 +304,9 @@ export default function MeshAnalyzer() {
             </div>
           </div>
 
-          {/* Right: Infographic Diagnostic Sheet (5 cols) */}
+          {/* Right: Infographic Diagnostic Sheet (5 Columns) */}
           <div className="lg:col-span-5 flex flex-col justify-between gap-4">
-            {/* Metric Box 1: Topology & Dimensions */}
+            {/* Metric Box: Topology & Dimensions */}
             <div className="p-5 rounded-xl glass-panel hud-border space-y-4 shadow-md">
               <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-2">
                 <span className="text-xs font-mono-tech uppercase font-bold text-neutral-800 dark:text-neutral-200">
@@ -306,7 +333,7 @@ export default function MeshAnalyzer() {
                 </div>
               </div>
 
-              {/* Stress & Infill Diagnostics */}
+              {/* Infill & Stress Diagnostics */}
               <div className="space-y-2.5 text-xs font-mono-tech">
                 <div className="flex justify-between items-center">
                   <span className="text-neutral-700 dark:text-neutral-300 font-medium">MANIFOLD INTEGRITY:</span>
@@ -335,7 +362,7 @@ export default function MeshAnalyzer() {
               </div>
             </div>
 
-            {/* Quick Slicing Action */}
+            {/* Quick Export STL Call-to-Action */}
             <div className="p-4 rounded-xl bg-gradient-to-br from-black/5 to-pink-500/10 dark:from-white/5 dark:to-pink-500/20 hud-border flex items-center justify-between">
               <div>
                 <span className="text-xs font-mono-tech font-bold uppercase block text-neutral-900 dark:text-neutral-100">
