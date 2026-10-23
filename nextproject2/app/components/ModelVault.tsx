@@ -1,3 +1,15 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: CLIENT-SIDE SEARCH & FILTERING IN HYBRID PATTERNS
+// ==============================================================================
+// File location: app/components/ModelVault.tsx
+// Declared as `"use client"` because it handles live user input, filter pills,
+// dynamic sorting, interactive modal toggling, and client-side audio playback.
+//
+// HYBRID DATA ARCHITECTURE PATTERN:
+// The server component (app/page.tsx or app/3d-models/page.tsx) loads the data
+// statically or from cache, and passes it as `initialModels` props down into this
+// Client Component. This provides the best of both worlds: fast SSR initial render
+// paired with zero-latency instant search/filtering on the client.
 "use client"
 
 import { useState, useMemo } from "react"
@@ -9,6 +21,7 @@ import ModelWireframeIcon from "./ModelWireframeIcon"
 import { getModelSpecs } from "@/app/lib/modelData"
 import { Search, Heart, Eye, ArrowUpRight, Box, Clock, Scale } from "lucide-react"
 
+// Strongly typed component props
 type ModelVaultProps = {
   initialModels: Model[]
   title?: string
@@ -24,19 +37,29 @@ export default function ModelVault({
   limit,
   showViewAll = true,
 }: ModelVaultProps) {
-  const [search, setSearch] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
+  // State for user text search query
+  const [search, setSearch] = useState<string>("")
+  // State for selected category filter ("all", "robotics", "art", etc.)
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  // State for sorting criteria ("likes" | "newest" | "name")
   const [sortBy, setSortBy] = useState<"likes" | "newest" | "name">("likes")
+  // Currently opened 3D quick inspect modal model, or null if modal is closed
   const [inspectModel, setInspectModel] = useState<Model | null>(null)
 
-  // Categories extraction
+  // ==============================================================================
+  // REACT MEMOIZATION: CATEGORY EXTRACTION
+  // ==============================================================================
+  // `useMemo` avoids re-calculating the distinct category set on every render cycle.
   const categories = useMemo(() => {
     const cats = new Set<string>()
     initialModels.forEach((m) => cats.add(m.category))
     return ["all", ...Array.from(cats)]
   }, [initialModels])
 
-  // Filtered & sorted models
+  // ==============================================================================
+  // REACT MEMOIZATION: FILTERING & SORTING PIPELINE
+  // ==============================================================================
+  // Efficiently calculates the subset of models whenever search, category, or sort changes.
   const filteredModels = useMemo(() => {
     return initialModels
       .filter((m) => {
@@ -57,7 +80,7 @@ export default function ModelVault({
   return (
     <section id="vault" className="w-full hud-border-b py-16 px-4 md:px-8 bg-neutral-100/70 dark:bg-black/40">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Section Headline */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono-tech text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1">
@@ -75,7 +98,7 @@ export default function ModelVault({
 
         {/* Filter and Search Bar */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8">
-          {/* Search Input */}
+          {/* Controlled Search Input Field */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input
@@ -87,7 +110,7 @@ export default function ModelVault({
             />
           </div>
 
-          {/* Sort Selector */}
+          {/* Sort Criteria Selector */}
           <div className="flex items-center gap-2 text-xs font-mono-tech">
             <span className="text-neutral-500 uppercase">SORT:</span>
             {(["likes", "newest", "name"] as const).map((s) => (
@@ -110,7 +133,7 @@ export default function ModelVault({
           </div>
         </div>
 
-        {/* Category Pills */}
+        {/* Category Pill Filters */}
         <div className="flex flex-wrap gap-2 mb-8">
           {categories.map((cat) => (
             <button
@@ -131,7 +154,10 @@ export default function ModelVault({
           ))}
         </div>
 
-        {/* Model Cards Grid: All 52 distinct cards */}
+        {/* ==============================================================================
+            MODEL CARDS GRID: 52 DISTINCT PROCEDURAL CAD BLUEPRINTS
+            Each card renders a unique procedural SVG wireframe and physical specifications.
+            ============================================================================== */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {filteredModels.map((model) => {
             const specs = getModelSpecs(model.id)
@@ -142,25 +168,25 @@ export default function ModelVault({
               >
                 {/* Card Header & Procedural Wireframe Preview */}
                 <div className="relative h-48 bg-gradient-to-br from-neutral-200 via-neutral-100 to-neutral-300 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 flex items-center justify-center overflow-hidden border-b border-neutral-200 dark:border-neutral-800">
-                  {/* Distinct Procedural Wireframe Visual */}
+                  {/* Distinct Procedural Wireframe Blueprint */}
                   <div className="w-28 h-28 relative flex items-center justify-center">
                     <ModelWireframeIcon id={model.id} name={model.name} category={model.category} />
                   </div>
 
-                  {/* Top Badge: Category */}
+                  {/* Top Category Badge */}
                   <div className="absolute top-3 left-3 z-10">
                     <span className="px-2 py-0.5 rounded bg-black/80 text-white dark:bg-white dark:text-black text-[10px] font-mono-tech uppercase font-bold tracking-wider">
                       {model.category}
                     </span>
                   </div>
 
-                  {/* Top Right: Likes */}
+                  {/* Likes counter */}
                   <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded bg-white/80 dark:bg-black/80 backdrop-blur-sm text-xs font-mono-tech text-neutral-800 dark:text-neutral-200">
                     <Heart className="w-3 h-3 text-pink-500 fill-pink-500" />
                     <span>{model.likes}</span>
                   </div>
 
-                  {/* Hover overlay: Quick 3D Inspect trigger */}
+                  {/* Hover Quick 3D Viewport Trigger */}
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                     <button
                       onClick={() => {
@@ -176,7 +202,7 @@ export default function ModelVault({
                   </div>
                 </div>
 
-                {/* Card Body */}
+                {/* Card Information Body */}
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-1.5">
                     <h3 className="font-extrabold text-xl font-condensed tracking-tight uppercase text-neutral-950 dark:text-neutral-50 group-hover:text-[#ff1a75] dark:group-hover:text-[#ff2a80] transition-colors">
@@ -205,7 +231,7 @@ export default function ModelVault({
                     </span>
                   </div>
 
-                  {/* Card Action footer */}
+                  {/* Action Navigation Footer */}
                   <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs font-mono-tech">
                     <span className="text-[10px] text-neutral-400">
                       ID #{model.id.toString().padStart(4, "0")}
@@ -222,6 +248,7 @@ export default function ModelVault({
                         3D VIEW
                       </button>
 
+                      {/* Next/Link pre-fetches the dynamic detail page /3d-models/[id] */}
                       <Link
                         href={`/3d-models/${model.id}`}
                         onMouseEnter={() => sound.playHover()}
@@ -239,7 +266,7 @@ export default function ModelVault({
           })}
         </div>
 
-        {/* View All Button if truncated */}
+        {/* Optional View All Button for truncated list views */}
         {showViewAll && limit && filteredModels.length < initialModels.length && (
           <div className="text-center pt-4">
             <Link
@@ -255,7 +282,7 @@ export default function ModelVault({
         )}
       </div>
 
-      {/* Floating 3D Inspection Modal */}
+      {/* Interactive 3D Modal Viewport */}
       <Quick3DModal model={inspectModel} onClose={() => setInspectModel(null)} />
     </section>
   )
