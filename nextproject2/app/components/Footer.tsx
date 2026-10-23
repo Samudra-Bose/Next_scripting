@@ -1,13 +1,28 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: CLIENT-SIDE FOOTER NAVIGATION & FORM HANDLING
+// ==============================================================================
+// File location: app/components/Footer.tsx
+// Declared as `"use client"` because it handles interactive client-side form submissions
+// (`onSubmit`), audio hover feedback, and responsive state.
 "use client"
 
 import Link from "next/link"
 import { sound } from "@/app/lib/sound"
 import { ArrowUpRight, ShieldCheck } from "lucide-react"
 
+// ==============================================================================
+// RETRO-BRUTALIST FOOTER COMPONENT
+// ==============================================================================
+// Features industrial coordinate markers, system status indicators, navigation sitemap,
+// live simulated telemetry readouts, and a newsletter dispatch subscriber form.
 export default function Footer() {
   return (
     <footer className="w-full hud-border-t bg-[#f0efe9] dark:bg-[#060709] text-neutral-900 dark:text-neutral-100 mt-24 relative overflow-hidden transition-colors">
-      {/* Top Crosshair Bar */}
+      
+      {/* ==============================================================================
+          TOP CROSSHAIR & DIAGNOSTIC BAR
+          Displays global system coordinates, nominal status, and cryptographic hashes.
+          ============================================================================== */}
       <div className="w-full px-4 md:px-8 py-2.5 hud-border-b flex items-center justify-between text-[11px] font-mono-tech text-neutral-600 dark:text-neutral-400 font-bold uppercase">
         <div className="flex items-center gap-4">
           <span className="text-neutral-950 dark:text-neutral-50">+ + + PRINTFORGE TERMINAL + + +</span>
@@ -19,8 +34,9 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* Main 4-Column Footer Grid */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 grid grid-cols-1 md:grid-cols-4 gap-12">
-        {/* Col 1 */}
+        {/* Column 1: Brand manifesto & open hardware certification */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 bg-black dark:bg-white inline-block" />
@@ -37,7 +53,10 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Col 2 */}
+        {/* ==============================================================================
+            Column 2: LAB SITEMAP DIRECTORY WITH NEXT/LINK
+            Next/Link preloads route bundles automatically on hover/viewport entry.
+            ============================================================================== */}
         <div className="space-y-3">
           <h4 className="text-xs font-mono-tech font-bold uppercase tracking-wider text-neutral-500">
             {"// LAB DIRECTORY"}
@@ -66,7 +85,7 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Col 3 */}
+        {/* Column 3: Live Telemetry Simulation Readouts */}
         <div className="space-y-3">
           <h4 className="text-xs font-mono-tech font-bold uppercase tracking-wider text-neutral-500">
             {"// TELEMETRY HUD"}
@@ -91,7 +110,10 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Col 4 */}
+        {/* ==============================================================================
+            Column 4: FORM SUBMISSION HANDLING (REACT CLIENT-SIDE CONTROL)
+            Prevents default full-page postbacks with e.preventDefault() and plays tactile audio.
+            ============================================================================== */}
         <div className="space-y-3">
           <h4 className="text-xs font-mono-tech font-bold uppercase tracking-wider text-neutral-500">
             {"// LAB DISPATCH"}
@@ -124,7 +146,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Bar */}
+      {/* Legal & Attribution Sub-Footer */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 hud-border-t flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono-tech text-neutral-500">
         <div>© 2026 PRINTFORGE LABS INC. OPEN HARDWARE STANDARD.</div>
         <div className="flex items-center gap-4 mt-2 sm:mt-0">
