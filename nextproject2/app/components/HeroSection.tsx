@@ -73,7 +73,7 @@ export default function HeroSection() {
         <span>+</span>
         <span className="font-extrabold text-[#ff1a75] dark:text-[#ff2a80] drop-shadow-sm">SLS</span>
         <span>+</span>
-        <span className="font-extrabold text-[#00e5ff] dark:text-[#00f0ff] drop-shadow-sm">STL</span>
+        <span className="font-abold text-[#00e5ff] dark:text-[#00f0ff] drop-shadow-sm">STL</span>
         <span className="rotate-90 origin-center mt-6 font-bold text-neutral-500">+ + +</span>
       </div>
 
