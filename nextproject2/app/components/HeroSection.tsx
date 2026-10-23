@@ -1,3 +1,9 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: CLIENT-SIDE INTERACTIVITY IN HERO COMPONENT
+// ==============================================================================
+// File location: app/components/HeroSection.tsx
+// Declared as `"use client"` because it handles user mouse interactions (hover audio,
+// click sound effects) and mounts the dynamic Three.js canvas `<MechanicalHero3D />`.
 "use client"
 
 import Link from "next/link"
@@ -5,11 +11,21 @@ import MechanicalHero3D from "./MechanicalHero3D"
 import { sound } from "@/app/lib/sound"
 import { Zap, ArrowDown, Box, Sparkles, Terminal } from "lucide-react"
 
+// ==============================================================================
+// HERO SECTION COMPONENT (NOOMO LABS RETRO-BRUTALIST TECH AESTHETIC)
+// ==============================================================================
+// Combines retro-industrial HUD diagnostics, giant condensed typography,
+// and a fluid, interactive Three.js 3D mechanical artifact centerpiece.
 export default function HeroSection() {
   return (
     <section id="hero" className="relative w-full min-h-[94vh] flex flex-col justify-between overflow-hidden px-4 md:px-8 pt-4 pb-12 hud-border-b">
-      {/* 1. Top HUD Row */}
+      
+      {/* ==============================================================================
+          1. TOP HUD STATUS ROW
+          Displays live lab diagnostics, system status pulse, and quick navigation links.
+          ============================================================================== */}
       <div className="w-full flex items-center justify-between text-xs font-mono-tech uppercase tracking-widest text-neutral-700 dark:text-neutral-300 pt-2 pb-4">
+        {/* Lab indicator & animated heartbeat dot */}
         <div className="flex items-center gap-3">
           <span className="font-extrabold text-neutral-950 dark:text-neutral-50 flex items-center gap-2">
             <span className="inline-block w-2.5 h-2.5 bg-[#ff1a75] animate-ping rounded-full shadow-[0_0_8px_#ff1a75]" />
@@ -21,6 +37,7 @@ export default function HeroSection() {
           </span>
         </div>
 
+        {/* Secondary navigation links with tactile audio feedback */}
         <div className="flex items-center gap-4 font-semibold">
           <Link
             href="/about"
@@ -31,7 +48,7 @@ export default function HeroSection() {
             [MANIFESTO]
           </Link>
           <a
-            href="https://github.com"
+            href="https://github.com/Samudra-Bose/Next_scripting"
             target="_blank"
             rel="noopener noreferrer"
             onMouseEnter={() => sound.playHover()}
@@ -43,8 +60,11 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* 2. Side HUD Indicators (Desktop) */}
-      {/* Left side vertical marker */}
+      {/* ==============================================================================
+          2. SIDE HUD DIAGNOSTIC MARKERS (Desktop viewports)
+          Retro-brutalist tech axis markers reminiscent of industrial CNC displays.
+          ============================================================================== */}
+      {/* Left side CNC process indicator */}
       <div className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 flex-col items-center gap-3 text-[11px] font-mono-tech text-neutral-700 dark:text-neutral-300 uppercase tracking-widest select-none z-30">
         <span className="rotate-90 origin-center mb-6 font-bold text-neutral-500">+ + +</span>
         <span className="font-extrabold text-neutral-900 dark:text-neutral-100">FDM</span>
@@ -57,7 +77,7 @@ export default function HeroSection() {
         <span className="rotate-90 origin-center mt-6 font-bold text-neutral-500">+ + +</span>
       </div>
 
-      {/* Right side vertical hatched track / scroll indicator */}
+      {/* Right side Z-axis layer height precision tracker */}
       <div className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 flex-col items-center gap-1.5 text-[10px] font-mono-tech text-neutral-600 dark:text-neutral-300 select-none z-30">
         <span className="font-extrabold text-neutral-900 dark:text-neutral-100">0.05</span>
         <div className="w-2 h-36 bg-neutral-300 dark:bg-neutral-800 rounded-full overflow-hidden relative shadow-inner">
@@ -67,29 +87,35 @@ export default function HeroSection() {
         <span className="text-[9px] uppercase tracking-tighter mt-1 text-neutral-500 font-bold">Z-AXIS</span>
       </div>
 
-      {/* 3. Centerpiece Stage: Giant Condensed Typography + 3D Mechanical Artifact with Radiant Halo */}
+      {/* ==============================================================================
+          3. CENTERPIECE STAGE: CONDENSED TYPOGRAPHY + 3D INTERACTIVE ARTIFACT
+          Features viewport-relative typography (`text-[15vw]`) and a radial backlight halo.
+          ============================================================================== */}
       <div className="relative w-full flex-1 flex flex-col items-center justify-center my-2">
-        {/* Soft Radial Backlight Halo from Noomo Reference */}
+        {/* Soft radial backlight glow behind the 3D model */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
           <div className="w-[600px] h-[600px] rounded-full hero-halo filter blur-3xl opacity-70 animate-pulse" />
         </div>
 
-        {/* Giant Headline Typography stretching behind/around 3D canvas */}
+        {/* Giant headline typography positioned behind the Three.js canvas */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center pointer-events-none select-none z-10 w-full">
           <h1 className="text-[14vw] sm:text-[16vw] font-black tracking-tighter uppercase font-condensed leading-[0.82] text-center w-full text-neutral-950/90 dark:text-neutral-50/90 drop-shadow-md">
             PRINT&nbsp;FORGE
           </h1>
         </div>
 
-        {/* Interactive 3D Canvas intersecting the typography */}
+        {/* 3D WebGL Canvas Component (MechanicalHero3D) */}
         <div className="relative z-20 w-full max-w-5xl mx-auto">
           <MechanicalHero3D />
         </div>
       </div>
 
-      {/* 4. Bottom HUD: Lightning bolt icon + Subtitle + Action CTA buttons */}
+      {/* ==============================================================================
+          4. BOTTOM HUD: VALUE PROPOSITION & CALL-TO-ACTION BUTTONS
+          Provides immediate navigation routes to the 3D vault, slicer, and analyzer.
+          ============================================================================== */}
       <div className="w-full flex flex-col items-center justify-center text-center space-y-5 z-30 mt-4">
-        {/* Lightning icon & Noomo-style bold condensed statement */}
+        {/* Industrial value statement */}
         <div className="flex flex-col items-center space-y-2.5 max-w-3xl px-4">
           <div className="w-7 h-7 rounded-full bg-neutral-950 dark:bg-neutral-50 text-white dark:text-neutral-950 flex items-center justify-center shadow-lg animate-pulse">
             <Zap className="w-4 h-4 fill-current text-amber-400" />
@@ -102,8 +128,9 @@ export default function HeroSection() {
           </p>
         </div>
 
-        {/* Action CTAs with high contrast and glowing hover */}
+        {/* Action CTAs */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+          {/* Link component pre-fetches the 52 model catalog */}
           <Link
             href="/3d-models"
             onMouseEnter={() => sound.playHover()}
@@ -114,6 +141,7 @@ export default function HeroSection() {
             <span>EXPLORE 3D VAULT (52 MODELS)</span>
           </Link>
 
+          {/* Slicer simulator anchor link */}
           <a
             href="#slicer"
             onMouseEnter={() => sound.playHover()}
@@ -124,6 +152,7 @@ export default function HeroSection() {
             <span>LAUNCH 3D SLICER SIM</span>
           </a>
 
+          {/* Mesh analyzer anchor link */}
           <a
             href="#analyzer"
             onMouseEnter={() => sound.playHover()}
@@ -135,7 +164,7 @@ export default function HeroSection() {
           </a>
         </div>
 
-        {/* Scroll down prompt */}
+        {/* Interactive scroll prompt */}
         <div className="pt-3 flex items-center justify-center">
           <a
             href="#telemetry"
