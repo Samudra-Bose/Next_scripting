@@ -1,3 +1,9 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: REAL-TIME TELEMETRY STREAM IN CLIENT COMPONENTS
+// ==============================================================================
+// File location: app/components/TelemetryHud.tsx
+// Declared as `"use client"` because it executes real-time JavaScript timers (`setInterval`),
+// mutates component state, and triggers Web Audio hover sound effects.
 "use client"
 
 import { useEffect, useState } from "react"
@@ -5,12 +11,17 @@ import { sound } from "@/app/lib/sound"
 import { Activity, Gauge, Flame, Cpu, HardDrive, Zap, CheckCircle2 } from "lucide-react"
 
 export default function TelemetryHud() {
-  const [slices, setSlices] = useState(148924)
-  const [hotendTemp, setHotendTemp] = useState(215.2)
-  const [bedTemp, setBedTemp] = useState(60.1)
-  const [speed, setSpeed] = useState(320)
+  // State variables simulating live telemetry from CoreXY 3D printer fleet
+  const [slices, setSlices] = useState<number>(148924)
+  const [hotendTemp, setHotendTemp] = useState<number>(215.2)
+  const [bedTemp, setBedTemp] = useState<number>(60.1)
+  const [speed, setSpeed] = useState<number>(320)
 
-  // Real-time subtle fluctuation for high-tech telemetry feeling
+  // ==============================================================================
+  // REACT LIFECYCLE: POLLING / TELEMETRY INTERVAL
+  // ==============================================================================
+  // Sets up a timer simulating live telemetry data feeds.
+  // ALWAYS return a cleanup function `() => clearInterval(interval)` to prevent memory leaks!
   useEffect(() => {
     const interval = setInterval(() => {
       setSlices((prev) => prev + (Math.random() > 0.6 ? 1 : 0))
@@ -19,9 +30,11 @@ export default function TelemetryHud() {
       setSpeed(Math.floor(315 + Math.random() * 20))
     }, 2200)
 
+    // Unmount cleanup function
     return () => clearInterval(interval)
   }, [])
 
+  // Telemetry stat definition array mapped into cards below
   const stats = [
     {
       label: "TOTAL G-CODE SLICES",
@@ -55,7 +68,11 @@ export default function TelemetryHud() {
 
   return (
     <section id="telemetry" className="w-full hud-border-b bg-black/[0.015] dark:bg-white/[0.015] py-12">
-      {/* 1. Continuous Live Ticker Marquee with crisp contrast */}
+      
+      {/* ==============================================================================
+          1. CONTINUOUS LIVE TICKER MARQUEE
+          Uses CSS keyframe animation (`animate-marquee`) to scroll live diagnostics indefinitely.
+          ============================================================================== */}
       <div className="w-full overflow-hidden hud-border-b pb-4 mb-10">
         <div className="animate-marquee whitespace-nowrap flex items-center gap-8 text-xs font-mono-tech tracking-wider text-neutral-800 dark:text-neutral-200 uppercase select-none font-semibold">
           <span className="flex items-center gap-2">
@@ -83,7 +100,7 @@ export default function TelemetryHud() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        {/* Section Header with high contrast */}
+        {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono-tech text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1.5 font-bold">
@@ -99,7 +116,10 @@ export default function TelemetryHud() {
           </p>
         </div>
 
-        {/* 4-Column Stat Infographic Grid with lively glass cards */}
+        {/* ==============================================================================
+            2. FOUR-COLUMN INFOGRAPHIC STATS GRID
+            Maps over our strongly typed metric list, displaying bold monospace typography.
+            ============================================================================== */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat) => {
             const Icon = stat.icon
@@ -127,7 +147,10 @@ export default function TelemetryHud() {
           })}
         </div>
 
-        {/* Live Gauges Row: Hotend, Bed, Speed, Extrusion */}
+        {/* ==============================================================================
+            3. LIVE PRINTER GAUGES ROW (Hotend, Heated Bed, CoreXY Acceleration)
+            Visually represents physical extruder values with animated gradient progress bars.
+            ============================================================================== */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Gauge 1: Hotend Thermal State */}
           <div className="p-4 rounded-xl hud-border glass-panel flex items-center justify-between">
