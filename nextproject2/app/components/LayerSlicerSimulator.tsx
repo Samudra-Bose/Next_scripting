@@ -1,3 +1,9 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: DYNAMIC CLIENT-SIDE SIMULATION ENGINE
+// ==============================================================================
+// File location: app/components/LayerSlicerSimulator.tsx
+// Declared as `"use client"` because it manages real-time 3D WebGL rendering,
+// interactive range scrubbers, intervals for auto-simulation, and browser audio.
 "use client"
 
 import { useEffect, useRef, useState } from "react"
@@ -6,17 +12,29 @@ import { sound } from "@/app/lib/sound"
 import { Play, Pause, RotateCcw, Terminal, Sparkles } from "lucide-react"
 
 export default function LayerSlicerSimulator() {
+  // Container ref where Three.js mounts its canvas element
   const containerRef = useRef<HTMLDivElement>(null)
-  const [progress, setProgress] = useState(45) // 0 to 100
+
+  // React state controlling the current layer height slice (0 to 100%)
+  const [progress, setProgress] = useState<number>(45)
+  // Mirror state to a ref so requestAnimationFrame always reads fresh progress without effect re-triggers
   const progressRef = useRef(progress)
-  const [isPlaying, setIsPlaying] = useState(false)
+
+  // Playback state for automatic time-lapse printing simulation
+  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+
+  // Active 3D model geometry selection ("gear" | "vase" | "helmet")
   const [selectedModel, setSelectedModel] = useState<"gear" | "vase" | "helmet">("gear")
 
+  // Synchronize progress ref on state change
   useEffect(() => {
     progressRef.current = progress
   }, [progress])
 
-  // Three.js internal refs
+  // ==============================================================================
+  // THREE.JS SCENE INSTANCE REFS
+  // ==============================================================================
+  // Retaining instance references allows programmatic mutation without triggering React re-renders.
   const sceneRef = useRef<THREE.Scene | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
@@ -26,7 +44,7 @@ export default function LayerSlicerSimulator() {
   const totalLayers = 60
   const layerMeshesRef = useRef<THREE.Mesh[]>([])
 
-  // G-code mock streams
+  // Mock G-code instructions displayed synchronously in the diagnostic terminal
   const gcodeSamples = [
     "G1 X124.32 Y88.19 E2.4182 F18000 ; perimeter",
     "G1 X125.10 Y89.44 E2.4390 F18000 ; infill zig-zag",
@@ -38,26 +56,29 @@ export default function LayerSlicerSimulator() {
     "G1 Z28.40 F1200 ; Z-hop layer advance",
   ]
 
+  // Calculate current G-code command based on progress index
   const currentGcode = gcodeSamples[Math.min(gcodeSamples.length - 1, Math.floor((progress / 100) * gcodeSamples.length))]
 
-  // Setup Three.js scene
+  // ==============================================================================
+  // THREE.JS SETUP & LIFECYCLE MANAGEMENT
+  // ==============================================================================
+  // Re-runs only when the user selects a new model, rebuilding the sliced layer stacks.
   useEffect(() => {
     if (!containerRef.current) return
     const container = containerRef.current
     const width = container.clientWidth
     const height = container.clientHeight
 
-    // Scene
+    // 1. Perspective Camera
     const scene = new THREE.Scene()
     sceneRef.current = scene
 
-    // Camera
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100)
     camera.position.set(4.5, 4.2, 5.5)
     camera.lookAt(0, 0.8, 0)
     cameraRef.current = camera
 
-    // Renderer
+    // 2. High-Performance WebGL Renderer
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -68,7 +89,7 @@ export default function LayerSlicerSimulator() {
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
-    // Lights
+    // 3. Lighting Rig (Ambient + Hotend Extrusion Point Light)
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.2)
     scene.add(ambientLight)
 
@@ -79,7 +100,7 @@ export default function LayerSlicerSimulator() {
     const hotendLight = new THREE.PointLight(0xff2a7a, 3.5, 6)
     scene.add(hotendLight)
 
-    // Build Plate (Grid texture)
+    // 4. Heated Aluminum Build Plate & Grid Lines
     const plateGeom = new THREE.BoxGeometry(4.5, 0.1, 4.5)
     const plateMat = new THREE.MeshStandardMaterial({
       color: 0x1a1a20,
@@ -90,17 +111,15 @@ export default function LayerSlicerSimulator() {
     plate.position.y = -0.05
     scene.add(plate)
 
-    // Build Plate Grid Lines
     const gridHelper = new THREE.GridHelper(4.4, 22, 0xff2a7a, 0x444455)
     gridHelper.position.y = 0.005
     scene.add(gridHelper)
 
-    // Layers Group
+    // 5. Procedural Sliced Geometry Layers
     const layersGroup = new THREE.Group()
     scene.add(layersGroup)
     layersGroupRef.current = layersGroup
 
-    // Build Sliced Geometry layers
     const layerMeshes: THREE.Mesh[] = []
     const layerHeight = 0.04
     for (let i = 0; i < totalLayers; i++) {
@@ -108,8 +127,8 @@ export default function LayerSlicerSimulator() {
       const progressRatio = i / totalLayers
       let radius = 1.2
 
+      // Procedural radius modulation per model type
       if (selectedModel === "gear") {
-        // Gear teeth silhouette
         radius = 1.1 + Math.sin(progressRatio * Math.PI) * 0.3
       } else if (selectedModel === "vase") {
         radius = 0.6 + Math.sin(progressRatio * Math.PI * 2) * 0.4 + progressRatio * 0.5
@@ -131,7 +150,7 @@ export default function LayerSlicerSimulator() {
     }
     layerMeshesRef.current = layerMeshes
 
-    // Nozzle & Toolhead
+    // 6. Extruder Toolhead & Nozzle
     const nozzleGroup = new THREE.Group()
     const coneGeom = new THREE.ConeGeometry(0.2, 0.4, 16)
     const coneMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.2 })
@@ -139,7 +158,7 @@ export default function LayerSlicerSimulator() {
     cone.rotation.x = Math.PI
     nozzleGroup.add(cone)
 
-    // Extrusion Glow tip
+    // Molten filament tip glow
     const tipGlowGeom = new THREE.SphereGeometry(0.05, 12, 12)
     const tipGlowMat = new THREE.MeshBasicMaterial({ color: 0xff2a7a })
     const tipGlow = new THREE.Mesh(tipGlowGeom, tipGlowMat)
@@ -149,25 +168,26 @@ export default function LayerSlicerSimulator() {
     scene.add(nozzleGroup)
     nozzleRef.current = nozzleGroup
 
-    // Animation Loop
+    // 7. Render Loop
     const clock = new THREE.Clock()
     const animate = () => {
       const elapsed = clock.getElapsedTime()
 
-      // Rotate build plate slightly for dynamic perspective
+      // Subtle turntable rotation of the build platform
       if (layersGroupRef.current) {
         layersGroupRef.current.rotation.y = elapsed * 0.15
       }
       gridHelper.rotation.y = elapsed * 0.15
       plate.rotation.y = elapsed * 0.15
 
-      // Position nozzle at active layer top
+      // Calculate toolhead Z-height following active layer
       const currentLayerIdx = Math.min(
         totalLayers - 1,
         Math.floor((progressRef.current / 100) * totalLayers)
       )
       const currentY = currentLayerIdx * layerHeight + 0.22
 
+      // Toolhead orbits depositing filament in circular toolpath
       if (nozzleRef.current) {
         const orbitAngle = elapsed * 3.5
         const orbitRadius = 0.8
@@ -184,7 +204,7 @@ export default function LayerSlicerSimulator() {
     }
     animate()
 
-    // Resize handler
+    // 8. Responsive Resize Observer
     const handleResize = () => {
       if (!containerRef.current || !rendererRef.current || !cameraRef.current) return
       const w = containerRef.current.clientWidth
@@ -195,6 +215,7 @@ export default function LayerSlicerSimulator() {
     }
     window.addEventListener("resize", handleResize)
 
+    // Unmount cleanup: dispose WebGL buffers and DOM nodes
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
       window.removeEventListener("resize", handleResize)
@@ -206,12 +227,15 @@ export default function LayerSlicerSimulator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModel])
 
-  // Sync visible layers when progress updates
+  // ==============================================================================
+  // REACT STATE HOOK: REAL-TIME LAYER SLICE VISIBILITY SYNC
+  // ==============================================================================
+  // Toggles visibility of layer meshes matching current scrubber progress.
   useEffect(() => {
     layerMeshesRef.current.forEach((mesh, idx) => {
       const active = (idx / totalLayers) * 100 <= progress
       mesh.visible = active
-      // Highlight topmost active layer with glowing neon pink
+      // Emissive highlight on topmost newly deposited layer
       const isTop = idx === Math.floor((progress / 100) * totalLayers)
       if (mesh.material instanceof THREE.MeshStandardMaterial) {
         if (isTop) {
@@ -225,7 +249,10 @@ export default function LayerSlicerSimulator() {
     })
   }, [progress])
 
-  // Auto-play print simulation
+  // ==============================================================================
+  // TIME-LAPSE SIMULATION TIMER
+  // ==============================================================================
+  // Progresses print simulation automatically when isPlaying is active.
   useEffect(() => {
     if (!isPlaying) return
     const timer = setInterval(() => {
@@ -242,18 +269,21 @@ export default function LayerSlicerSimulator() {
     return () => clearInterval(timer)
   }, [isPlaying])
 
+  // User playback toggle
   const togglePlay = () => {
     sound.playClick()
     if (progress >= 100) setProgress(0)
     setIsPlaying(!isPlaying)
   }
 
+  // Reset simulator back to origin layer
   const handleReset = () => {
     sound.playClick()
     setIsPlaying(false)
     setProgress(0)
   }
 
+  // Calculated layer metrics
   const currentLayerNumber = Math.min(
     totalLayers,
     Math.max(1, Math.floor((progress / 100) * totalLayers))
@@ -263,7 +293,7 @@ export default function LayerSlicerSimulator() {
   return (
     <section id="slicer" className="w-full hud-border-b py-16 px-4 md:px-8 bg-neutral-900 text-neutral-100 relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono-tech text-pink-400 uppercase tracking-widest mb-1">
@@ -274,6 +304,8 @@ export default function LayerSlicerSimulator() {
               REAL-TIME 3D LAYER SLICER & PRINTER SIM
             </h2>
           </div>
+
+          {/* Model Switcher Buttons */}
           <div className="flex items-center gap-2">
             {(["gear", "vase", "helmet"] as const).map((m) => (
               <button
@@ -295,11 +327,11 @@ export default function LayerSlicerSimulator() {
           </div>
         </div>
 
-        {/* Simulator Grid Layout */}
+        {/* Simulator Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* Left: 3D Viewport (8 cols) */}
+          {/* Left: 3D Viewport (8 Columns) */}
           <div className="lg:col-span-8 relative bg-black/60 rounded-xl border border-white/10 overflow-hidden flex flex-col">
-            {/* Viewport Top HUD Bar */}
+            {/* Viewport HUD Header */}
             <div className="px-4 py-2 border-b border-white/10 flex items-center justify-between text-[11px] font-mono-tech text-neutral-400 bg-white/[0.02]">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1.5 text-white">
@@ -313,13 +345,13 @@ export default function LayerSlicerSimulator() {
               </div>
             </div>
 
-            {/* Canvas */}
+            {/* Three.js Canvas Container */}
             <div
               ref={containerRef}
               className="w-full h-[380px] sm:h-[460px] cursor-grab active:cursor-grabbing relative"
             />
 
-            {/* Scrubber Controls Bar at bottom of viewport */}
+            {/* Scrubber Controls Bar */}
             <div className="p-4 border-t border-white/10 bg-black/70 backdrop-blur-md flex flex-col gap-3">
               <div className="flex items-center justify-between text-xs font-mono-tech">
                 <div className="flex items-center gap-3">
@@ -342,6 +374,7 @@ export default function LayerSlicerSimulator() {
                   </button>
                 </div>
 
+                {/* Slicing Metrics readout */}
                 <div className="flex items-center gap-4 text-neutral-300">
                   <span>
                     LAYER: <strong className="text-white">{currentLayerNumber}</strong> / {totalLayers}
@@ -355,7 +388,7 @@ export default function LayerSlicerSimulator() {
                 </div>
               </div>
 
-              {/* Progress Range Slider */}
+              {/* Range input slider */}
               <div className="relative flex items-center">
                 <input
                   type="range"
@@ -372,9 +405,9 @@ export default function LayerSlicerSimulator() {
             </div>
           </div>
 
-          {/* Right: Slicer Telemetry & Live G-Code Terminal (4 cols) */}
+          {/* Right: Telemetry & G-Code Parser (4 Columns) */}
           <div className="lg:col-span-4 flex flex-col justify-between gap-4 bg-black/40 rounded-xl border border-white/10 p-5 font-mono-tech">
-            {/* Telemetry Card */}
+            {/* Print Specification Specs */}
             <div className="space-y-3">
               <div className="flex items-center justify-between border-b border-white/10 pb-2">
                 <span className="text-xs uppercase text-neutral-400">PRINT SPECIFICATIONS</span>
@@ -405,7 +438,7 @@ export default function LayerSlicerSimulator() {
               </div>
             </div>
 
-            {/* Live G-Code Terminal Stream */}
+            {/* Real-time G-Code Terminal */}
             <div className="bg-black/90 rounded-lg border border-white/10 p-3 space-y-2">
               <div className="flex items-center justify-between text-[10px] text-neutral-400 border-b border-white/10 pb-1.5">
                 <span className="flex items-center gap-1.5 text-neutral-300">
@@ -425,7 +458,7 @@ export default function LayerSlicerSimulator() {
               </div>
             </div>
 
-            {/* Download G-Code Action */}
+            {/* G-Code Download CTA */}
             <button
               onClick={() => {
                 sound.playClick()
