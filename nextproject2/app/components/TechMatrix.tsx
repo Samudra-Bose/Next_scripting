@@ -1,9 +1,19 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: INTERACTIVE SPECIFICATION MATRIX
+// ==============================================================================
+// File location: app/components/TechMatrix.tsx
+// Declared as `"use client"` because it manages tab state (`selectedTech`)
+// and plays tactile Web Audio feedback sounds on user clicks and hovers.
 "use client"
 
 import { useState } from "react"
 import { sound } from "@/app/lib/sound"
 import { Layers } from "lucide-react"
 
+// ==============================================================================
+// TYPESCRIPT DOMAIN TYPE: 3D PRINTING PROCESS BENCHMARK
+// ==============================================================================
+// Defines the strict schema for comparing additive manufacturing processes (FDM, SLA, SLS).
 type TechItem = {
   id: "fdm" | "sla" | "sls"
   name: string
@@ -17,13 +27,14 @@ type TechItem = {
   idealFor: string
   accent: string
   stats: {
-    resolutionScore: number // 0 to 100
+    resolutionScore: number // 0 to 100 percentage score for progress bars
     speedScore: number
     strengthScore: number
     surfaceScore: number
   }
 }
 
+// Data collection modeling industry standard ISO-52900 3D printing technologies
 const TECHNOLOGIES: TechItem[] = [
   {
     id: "fdm",
@@ -85,12 +96,13 @@ const TECHNOLOGIES: TechItem[] = [
 ]
 
 export default function TechMatrix() {
+  // State hook managing currently inspected 3D printing process
   const [selectedTech, setSelectedTech] = useState<TechItem>(TECHNOLOGIES[0])
 
   return (
     <section id="specs" className="w-full hud-border-b py-16 px-4 md:px-8 bg-neutral-50 dark:bg-[#0b0c0f] transition-colors">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono-tech text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1">
@@ -106,7 +118,10 @@ export default function TechMatrix() {
           </p>
         </div>
 
-        {/* Tech Selector Tabs */}
+        {/* ==============================================================================
+            PROCESS SELECTOR TABS (FDM vs SLA vs SLS)
+            Clicking updates local state and plays mechanical haptic audio.
+            ============================================================================== */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {TECHNOLOGIES.map((tech) => {
             const active = selectedTech.id === tech.id
@@ -143,9 +158,12 @@ export default function TechMatrix() {
           })}
         </div>
 
-        {/* Deep Dive Card */}
+        {/* ==============================================================================
+            DEEP DIVE CARD: COMPARATIVE TECHNICAL METRICS
+            Two-column grid displaying engineering attributes on the left and visual bars on the right.
+            ============================================================================== */}
         <div className="p-6 md:p-8 rounded-2xl glass-panel hud-border shadow-lg grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Left Details (7 cols) */}
+          {/* Left Details (7 Columns) */}
           <div className="lg:col-span-7 space-y-5">
             <div className="inline-block px-3.5 py-1.5 rounded-full text-xs font-mono-tech font-bold uppercase tracking-wider bg-black/10 dark:bg-white/10 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-700">
               {selectedTech.badge}
@@ -159,7 +177,7 @@ export default function TechMatrix() {
               {selectedTech.idealFor}
             </p>
 
-            {/* Spec Matrix List */}
+            {/* Spec Matrix Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono-tech">
               <div className="p-3.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.04] border border-neutral-200 dark:border-neutral-800">
                 <span className="text-[10px] text-neutral-600 dark:text-neutral-400 font-bold block uppercase">LAYER RESOLUTION</span>
@@ -180,14 +198,14 @@ export default function TechMatrix() {
             </div>
           </div>
 
-          {/* Right Radar / Bar Infographics (5 cols) */}
+          {/* Right: Infographic Meter Bars (5 Columns) */}
           <div className="lg:col-span-5 p-5 rounded-xl bg-black/[0.03] dark:bg-white/[0.03] border border-neutral-200 dark:border-neutral-800 space-y-4">
             <div className="text-xs font-mono-tech uppercase font-bold text-neutral-500 border-b border-neutral-200 dark:border-neutral-800 pb-2">
               {"// PERFORMANCE RADAR MATRIX"}
             </div>
 
             <div className="space-y-3 font-mono-tech text-xs">
-              {/* Metric 1 */}
+              {/* Surface Finish Fidelity */}
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-neutral-500">SURFACE FINISH FIDELITY</span>
@@ -201,7 +219,7 @@ export default function TechMatrix() {
                 </div>
               </div>
 
-              {/* Metric 2 */}
+              {/* Layer Resolution */}
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-neutral-500">LAYER RESOLUTION (Z-AXIS)</span>
@@ -215,7 +233,7 @@ export default function TechMatrix() {
                 </div>
               </div>
 
-              {/* Metric 3 */}
+              {/* Tensile Strength */}
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-neutral-500">MECHANICAL TENSILE STRENGTH</span>
@@ -229,7 +247,7 @@ export default function TechMatrix() {
                 </div>
               </div>
 
-              {/* Metric 4 */}
+              {/* Print Speed & Throughput */}
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-neutral-500">PRINT SPEED & THROUGHPUT</span>
@@ -244,6 +262,7 @@ export default function TechMatrix() {
               </div>
             </div>
 
+            {/* Quality Standard Verification */}
             <div className="pt-2 text-[11px] font-mono-tech text-neutral-500 flex items-center justify-between">
               <span>CALIBRATED VIA ISO-52900</span>
               <span className="text-pink-600 dark:text-pink-400 font-bold">100% REPRODUCIBLE</span>
