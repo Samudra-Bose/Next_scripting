@@ -1,3 +1,15 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER & WEBGL 3D RENDERING ARCHITECTURE
+// ==============================================================================
+// File location: app/components/MechanicalHero3D.tsx
+// Declared as `"use client"` because Three.js interacts directly with the browser's
+// HTML5 `<canvas>` element and WebGL context.
+//
+// KEY ARCHITECTURAL BEST PRACTICE FOR THREE.JS IN NEXT.JS:
+// Standard React re-renders should NEVER tear down and recreate a WebGL scene.
+// Doing so causes visible canvas flickering, memory leaks, and WebGL context loss.
+// Therefore, we use `useRef` to maintain mutable state (rotation, velocity, materials)
+// without re-running the Three.js mounting `useEffect([], [])`.
 "use client"
 
 import { useEffect, useRef, useState } from "react"
@@ -6,44 +18,60 @@ import { sound } from "@/app/lib/sound"
 import { RotateCcw, Layers, Eye } from "lucide-react"
 
 export default function MechanicalHero3D() {
+  // Container DOM node where Three.js appends its WebGL canvas
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // React UI state for HUD button active states
   const [exploded, setExploded] = useState(false)
   const [wireframe, setWireframe] = useState(false)
 
-  // Stable references for state without re-creating Three.js scene
+  // ==============================================================================
+  // MUTABLE REFS: DECOUPLING REACT RE-RENDERS FROM THREE.JS ANIMATION LOOP
+  // ==============================================================================
+  // By mirroring boolean state into useRef, our requestAnimationFrame loop reads
+  // the latest values synchronously at 60/120 FPS without recreating the scene.
   const explodedRef = useRef(false)
   const wireframeRef = useRef(false)
 
+  // References to materials for real-time wireframe toggling
   const materialsRef = useRef<THREE.Material[]>([])
+
+  // Physics momentum rotation state (inertia drag calculations)
   const rotationRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0, vx: 0, vy: 0 })
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 })
   const isDraggingRef = useRef(false)
   const lastMousePos = useRef({ x: 0, y: 0 })
 
+  // ==============================================================================
+  // THREE.JS SCENE LIFECYCLE (MOUNT & CLEANUP)
+  // ==============================================================================
+  // The empty dependency array `[]` ensures this effect runs strictly ONCE on mount
+  // and disposes cleanly when unmounted, guaranteeing buttery-smooth performance.
   useEffect(() => {
     if (!containerRef.current) return
     const container = containerRef.current
     const width = container.clientWidth
     const height = container.clientHeight
 
-    // 1. Scene & Camera
+    // 1. Perspective Camera Setup (42° field of view for architectural precision)
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100)
     camera.position.set(0, 0, 7.2)
 
-    // 2. High-Performance Anti-Aliased Renderer
+    // 2. High-Performance WebGL 2.0 Renderer Configuration
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
       powerPreference: "high-performance",
     })
     renderer.setSize(width, height)
+    // Cap pixel ratio at 1.75 to balance ultra-crisp Retina visuals with GPU thermal efficiency
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75))
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.25
     container.appendChild(renderer.domElement)
 
-    // 3. Lighting Rig
+    // 3. Multi-Light Studio Rig (Cinematic PBR Shading)
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.2)
     scene.add(ambientLight)
 
@@ -51,12 +79,12 @@ export default function MechanicalHero3D() {
     keyLight.position.set(5, 8, 6)
     scene.add(keyLight)
 
-    // Interactive mouse cursor specular light
+    // Dynamic cursor-following specular light
     const cursorLight = new THREE.PointLight(0xffffff, 2.5, 12)
     cursorLight.position.set(0, 0, 4)
     scene.add(cursorLight)
 
-    // Vibrant Magenta / Iridescent Rim Light (Signature Noomo Hue)
+    // Vibrant Magenta / Iridescent Rim Light (Signature Noomo Lab Palette)
     const pinkLight = new THREE.PointLight(0xff1a75, 4.5, 18)
     pinkLight.position.set(-4.5, -1.5, 3)
     scene.add(pinkLight)
@@ -66,7 +94,7 @@ export default function MechanicalHero3D() {
     cyanLight.position.set(4.5, -2.5, -2)
     scene.add(cyanLight)
 
-    // 4. Materials
+    // 4. Physical PBR Materials
     const chromeMat = new THREE.MeshPhysicalMaterial({
       color: 0xf3f4f6,
       metalness: 0.98,
@@ -94,7 +122,7 @@ export default function MechanicalHero3D() {
     })
     materialsRef.current.push(brassMat)
 
-    // Translucent Iridescent Mantle (Noomo Jellyfish Tribute)
+    // Translucent Iridescent Mantle (Subsurface scattering & transmission)
     const translucentMantleMat = new THREE.MeshPhysicalMaterial({
       color: 0xff2a85,
       transmission: 0.65,
@@ -109,7 +137,7 @@ export default function MechanicalHero3D() {
     })
     materialsRef.current.push(translucentMantleMat)
 
-    // Glowing Bioluminescent Core
+    // Bioluminescent Heating Core Material
     const glowingCoreMat = new THREE.MeshStandardMaterial({
       color: 0xff1a75,
       emissive: 0xff0066,
@@ -120,7 +148,7 @@ export default function MechanicalHero3D() {
     })
     materialsRef.current.push(glowingCoreMat)
 
-    // Cyber Gyro Wire Ring Material
+    // Cyber Gyro Ring Wire Material
     const wireRingMat = new THREE.MeshBasicMaterial({
       color: 0x00e5ff,
       wireframe: true,
@@ -129,7 +157,7 @@ export default function MechanicalHero3D() {
     })
     materialsRef.current.push(wireRingMat)
 
-    // 5. Build Artifact Assembly
+    // 5. Build Artifact Assembly & Exploded View Vectors
     const mainGroup = new THREE.Group()
     scene.add(mainGroup)
 
@@ -152,7 +180,7 @@ export default function MechanicalHero3D() {
       dist: 1.5,
     })
 
-    // B. Internal Glowing Heating Core & Filament Coil
+    // B. Internal Heating Core & Filament Coil
     const coreGeom = new THREE.SphereGeometry(0.55, 32, 32)
     const coreMesh = new THREE.Mesh(coreGeom, glowingCoreMat)
     coreMesh.position.set(0, 0.35, 0)
@@ -226,7 +254,7 @@ export default function MechanicalHero3D() {
       dist: 1.2,
     })
 
-    // F. Articulated Dragon Claw / Actuator Struts (4 arms)
+    // F. Articulated Actuator Struts (4 arms)
     const armsGroup = new THREE.Group()
     for (let i = 0; i < 4; i++) {
       const angle = (i / 4) * Math.PI * 2
@@ -262,7 +290,7 @@ export default function MechanicalHero3D() {
     }
     mainGroup.add(armsGroup)
 
-    // G. Sinuous Bio-Mechanical Tendrils / Filament Ribbons (Reference Jellyfish Tentacles)
+    // G. Sinuous Bio-Mechanical Tendrils
     const tendrilCount = 8
     const tendrilSegments = 16
     const tendrilMeshes: { mesh: THREE.Line; baseAngles: number; length: number }[] = []
@@ -287,7 +315,7 @@ export default function MechanicalHero3D() {
       tendrilMeshes.push({ mesh: line, baseAngles: angle, length: tendrilSegments })
     }
 
-    // H. Dual Counter-Rotating Gyro Data Rings
+    // H. Dual Gyroscopic Orbit Rings
     const gyro1Geom = new THREE.TorusGeometry(2.35, 0.02, 12, 64)
     const gyro1 = new THREE.Mesh(gyro1Geom, wireRingMat)
     gyro1.rotation.x = Math.PI / 3
@@ -329,7 +357,7 @@ export default function MechanicalHero3D() {
     const sparkPoints = new THREE.Points(sparkGeom, sparkMat)
     mainGroup.add(sparkPoints)
 
-    // 6. Mouse Tracking & Inertial Orbit Controls
+    // 6. User Pointer Tracking & Physics Momentum Controls
     const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect()
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1
@@ -337,7 +365,7 @@ export default function MechanicalHero3D() {
       mouseRef.current.targetX = x * 0.5
       mouseRef.current.targetY = y * 0.5
 
-      // Move cursor specular point light
+      // Specular light matches cursor position
       cursorLight.position.x = x * 4
       cursorLight.position.y = y * 4
     }
@@ -369,7 +397,7 @@ export default function MechanicalHero3D() {
     window.addEventListener("mousemove", handleWindowMouseMove, { passive: true })
     window.addEventListener("mouseup", handleWindowMouseUp)
 
-    // Resize Handler
+    // Resize Handler keeping aspect ratio synchronized
     const handleResize = () => {
       if (!containerRef.current || !renderer || !camera) return
       const w = containerRef.current.clientWidth
@@ -380,7 +408,7 @@ export default function MechanicalHero3D() {
     }
     window.addEventListener("resize", handleResize)
 
-    // 7. Buttery-Smooth Animation Loop with Delta Time & Physics Damping
+    // 7. RequestAnimationFrame Render Loop with Delta Time
     const clock = new THREE.Clock()
     let currentExplode = 0
     let animId = 0
@@ -389,27 +417,27 @@ export default function MechanicalHero3D() {
       const delta = Math.min(clock.getDelta(), 0.08)
       const elapsedTime = clock.getElapsedTime()
 
-      // A. Smooth inertia decay for drag rotation
+      // Inertia momentum decay
       if (!isDraggingRef.current) {
         rotationRef.current.targetY += rotationRef.current.vx
         rotationRef.current.targetX += rotationRef.current.vy
-        rotationRef.current.vx *= 0.94 // gentle physical momentum decay
+        rotationRef.current.vx *= 0.94 // physical damping factor
         rotationRef.current.vy *= 0.94
       }
 
-      // B. Smooth spring lerps for rotation & parallax
+      // Smooth spring lerps for rotation
       rotationRef.current.y += (rotationRef.current.targetY - rotationRef.current.y) * 0.12
       rotationRef.current.x += (rotationRef.current.targetX - rotationRef.current.x) * 0.12
       mouseRef.current.x += (mouseRef.current.targetX - mouseRef.current.x) * 0.06
       mouseRef.current.y += (mouseRef.current.targetY - mouseRef.current.y) * 0.06
 
-      // C. Continuous organic hovering float
+      // Organic floating animation
       const baseAutoY = elapsedTime * 0.22
       mainGroup.rotation.y = baseAutoY + rotationRef.current.y + mouseRef.current.x
       mainGroup.rotation.x = 0.15 + rotationRef.current.x - mouseRef.current.y
-      mainGroup.position.y = Math.sin(elapsedTime * 1.6) * 0.14 // organic breathing float
+      mainGroup.position.y = Math.sin(elapsedTime * 1.6) * 0.14
 
-      // D. Smooth Exploded View Lerp without resetting scene
+      // Exploded View smooth exponential transition
       const targetExplode = explodedRef.current ? 1 : 0
       currentExplode += (targetExplode - currentExplode) * (1 - Math.exp(-7 * delta))
 
@@ -418,11 +446,11 @@ export default function MechanicalHero3D() {
         part.mesh.position.copy(part.basePos.clone().add(offset))
       })
 
-      // E. Pulsing bioluminescent heating core intensity
+      // Core pulse
       const pulse = 1.6 + Math.sin(elapsedTime * 3.2) * 0.8
       glowingCoreMat.emissiveIntensity = pulse
 
-      // F. Undulate fiber-optic tendrils with fluid wave physics
+      // Wave kinematics for tendrils
       tendrilMeshes.forEach((t, i) => {
         const posAttr = t.mesh.geometry.attributes.position as THREE.BufferAttribute
         const points = posAttr.array as Float32Array
@@ -436,7 +464,7 @@ export default function MechanicalHero3D() {
         posAttr.needsUpdate = true
       })
 
-      // G. Update floating energy spark particles
+      // Orbiting energy sparks
       const sparkPosArray = sparkGeom.attributes.position.array as Float32Array
       for (let i = 0; i < sparkCount; i++) {
         const vel = sparkVelocities[i]
@@ -447,7 +475,7 @@ export default function MechanicalHero3D() {
       }
       sparkGeom.attributes.position.needsUpdate = true
 
-      // H. Counter-rotate gyro rings and gear teeth
+      // Gyro rotations
       gyro1.rotation.z = elapsedTime * 0.35
       gyro2.rotation.x = elapsedTime * -0.28
       teethGroup.rotation.y = -elapsedTime * 0.32
@@ -458,6 +486,7 @@ export default function MechanicalHero3D() {
 
     animate()
 
+    // Clean up event listeners and WebGL resources on unmount
     return () => {
       cancelAnimationFrame(animId)
       container.removeEventListener("mousemove", handleMouseMove)
@@ -470,9 +499,9 @@ export default function MechanicalHero3D() {
       }
       renderer.dispose()
     }
-  }, []) // Empty dependency array ensures permanent smooth WebGL context!
+  }, [])
 
-  // Wireframe toggler
+  // Wireframe toggle handler
   const toggleWireframe = () => {
     sound.playClick()
     const next = !wireframe
@@ -485,7 +514,7 @@ export default function MechanicalHero3D() {
     })
   }
 
-  // Explode toggle with audio servo
+  // Exploded view toggle handler
   const handleToggleExplode = () => {
     sound.playServo()
     const next = !exploded
@@ -493,6 +522,7 @@ export default function MechanicalHero3D() {
     explodedRef.current = next
   }
 
+  // Reset 3D camera orientation
   const handleResetCamera = () => {
     sound.playClick()
     rotationRef.current.targetX = 0
