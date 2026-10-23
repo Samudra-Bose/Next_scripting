@@ -1,11 +1,30 @@
+// ==============================================================================
+// NEXT.JS APP ROUTER CONCEPT: ASYNC SERVER COMPONENTS & DATA ARCHITECTURE
+// ==============================================================================
+// File location: app/posts/page.tsx
+// In the Next.js App Router, pages default to Server Components.
+// Server Components can be declared as `async` functions, allowing direct
+// server-side data fetching (database queries, filesystem reads, or remote APIs)
+// without requiring useEffect or useState hooks on the client.
+
 import Link from "next/link"
 import { ArrowRight, ArrowLeft, Terminal } from "lucide-react"
+import type { Metadata } from "next"
 
-export const metadata = {
+// ==============================================================================
+// NEXT.JS CONCEPT: STATIC METADATA EXPORT
+// ==============================================================================
+// Next.js evaluates this metadata object at build time and embeds it into the HTML head.
+// Search engines receive fully hydrated metadata tags without running JavaScript.
+export const metadata: Metadata = {
   title: "ENGINEERING NOTES // PrintForge Labs",
   description: "Technical articles on 3D slicing, CoreXY kinematics, tolerance engineering, and materials science.",
 }
 
+// ==============================================================================
+// TYPESCRIPT DATA CONTRACT
+// ==============================================================================
+// Strongly typed schema ensuring compile-time validation for our articles.
 type Post = {
   id: number
   title: string
@@ -15,6 +34,7 @@ type Post = {
   readTime: string
 }
 
+// Simulated data source (in real production, this can be fetched from a CMS, SQLite, or API)
 const ARTICLES: Post[] = [
   {
     id: 1,
@@ -50,11 +70,18 @@ const ARTICLES: Post[] = [
   },
 ]
 
+// ==============================================================================
+// NEXT.JS SERVER COMPONENT: POST ARCHIVE
+// ==============================================================================
+// Executed on the server. Zero JavaScript is shipped to the client for this logic.
 export default async function PostPage() {
   return (
     <div className="w-full min-h-screen py-12 px-4 md:px-8">
       <div className="max-w-4xl mx-auto space-y-10">
-        {/* Breadcrumb */}
+        {/* ==============================================================================
+            NEXT.JS ROUTING: BACK NAVIGATION
+            Link components enable instant client-side transitions without full browser reloads.
+            ============================================================================== */}
         <div className="flex items-center justify-between hud-border-b pb-4 text-xs font-mono-tech uppercase text-neutral-500">
           <Link
             href="/"
@@ -66,7 +93,7 @@ export default async function PostPage() {
           <span>TECHNICAL DISPATCH ARCHIVE</span>
         </div>
 
-        {/* Header */}
+        {/* Section Header */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs font-mono-tech text-cyan-600 dark:text-cyan-400 uppercase tracking-widest">
             <Terminal className="w-4 h-4" />
@@ -80,13 +107,17 @@ export default async function PostPage() {
           </p>
         </div>
 
-        {/* Articles List */}
+        {/* ==============================================================================
+            NEXT.JS COMPONENT RENDERING: ARTICLES LIST
+            Rendered statically at build time into pristine HTML semantic tags (<article>).
+            ============================================================================== */}
         <div className="space-y-6">
           {ARTICLES.map((article) => (
             <article
               key={article.id}
               className="p-6 md:p-8 rounded-2xl glass-panel hud-border hover:border-black dark:hover:border-white transition-all space-y-4 group shadow-md hover:-translate-y-0.5"
             >
+              {/* Metadata pill & publish timestamp */}
               <div className="flex items-center justify-between text-xs font-mono-tech">
                 <span className="px-2.5 py-1 rounded-full bg-[#ff1a75]/15 uppercase tracking-wider text-[#ff1a75] dark:text-[#ff2a80] font-bold border border-[#ff1a75]/30">
                   {article.tag}
@@ -98,14 +129,17 @@ export default async function PostPage() {
                 </span>
               </div>
 
+              {/* Post Title */}
               <h2 className="text-2xl md:text-3xl font-black font-condensed tracking-tight uppercase text-neutral-950 dark:text-neutral-50 group-hover:text-[#ff1a75] dark:group-hover:text-[#ff2a80] transition-colors">
                 {article.title}
               </h2>
 
+              {/* Post Body Snippet */}
               <p className="text-xs md:text-sm font-mono-tech text-neutral-700 dark:text-neutral-300 font-medium leading-relaxed">
                 {article.body}
               </p>
 
+              {/* Technical Archive Footer Identifier */}
               <div className="pt-2 flex items-center justify-between text-xs font-mono-tech text-neutral-500">
                 <span>DOCUMENT #PF-ENG-0{article.id}</span>
                 <span className="flex items-center gap-1 font-bold text-neutral-900 dark:text-neutral-100 group-hover:translate-x-1 transition-transform">
